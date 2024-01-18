@@ -1,0 +1,25 @@
+config = {
+    # tencent main
+    "tencent_main_app_id": "",
+    "tencent_main_secret_id": "",
+    "tencent_main_secret_key": "",
+
+    "tencent_cos_bucket":"",
+    "tencent_cos_region":"",
+    "tencent_cos_prefix":"",
+
+    # tencent sub
+    "tencent_sub_passwd": "",
+    "tencent_sub_secret_id":"",
+    "tencent_sub_secret_key":"",
+
+    # gaode
+    "gaode_key":"",
+
+    # zhipu
+    "zhipuai_key": "",
+}
+
+tencent_sub_config = { 
+    k[12:]: v for k, v in config.items() if k.startswith("tencent_sub_")
+}

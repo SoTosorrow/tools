@@ -1,0 +1,6 @@
+# python
+config.py
+__pycache__/*
+
+# nodejs
+config.js
