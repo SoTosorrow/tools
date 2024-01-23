@@ -20,6 +20,6 @@ config = {
     "zhipuai_key": "",
 }
 
-tencent_sub_config = { 
+tencent_acc_config = { 
     k[12:]: v for k, v in config.items() if k.startswith("tencent_sub_")
 }

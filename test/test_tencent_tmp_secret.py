@@ -1,4 +1,4 @@
-from config import tencent_sub_config as config
+from config import tencent_acc_config as config
 
 from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
