@@ -5,21 +5,31 @@ config = {
     "tencent_main_secret_key": "",
 
     "tencent_cos_bucket":"",
-    "tencent_cos_region":"",
     "tencent_cos_prefix":"",
 
     # tencent sub
     "tencent_sub_passwd": "",
     "tencent_sub_secret_id":"",
     "tencent_sub_secret_key":"",
+    "tencent_sub_region":"",
 
     # gaode
     "gaode_key":"",
 
     # zhipu
     "zhipuai_key": "",
+
+    # google
+    "google_key": "",
+    "google_search_engine_id": "",
 }
 
 tencent_acc_config = { 
     k[12:]: v for k, v in config.items() if k.startswith("tencent_sub_")
+}
+tencent_cos_config = { 
+    k[12:]: v for k, v in config.items() if k.startswith("tencent_cos_")
+}
+google_config = {
+    k[7:]: v for k, v in config.items() if k.startswith("google_")
 }
