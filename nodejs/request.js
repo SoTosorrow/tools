@@ -1,65 +1,82 @@
-import qs from 'qs'
-import fs from 'fs'
+const FetchTypeEnum = {
+    Json: "application/json",
+    FormData: "multipart/form-data",
+    Blob: "application/octet-stream"
+}
 
-// front may give
+// TODO interceptor
+interceptorRequest = {}
+interceptorResponse = {}
 
-// front may get
+const fetchWrapper = async(url, params={}, options={})=>{
+    const { method, input_type=FetchTypeEnum.Json, output_type } = options
 
-// intern needL localstorage:token
-// headers["Content-Type"] = "application/octet-stream"?
-const fetchWrapper = async (url, params, option={}) => {
-    let method = option.method || "POST"
-    let is_blob = option.is_blob || false
-    let headers = { 
-        "Content-Type": "application/json",     // default to json
+    let headers = {
         // "Authorization": "Bearer " + localStorage.getItem('token')  // add token
     }
-    let body = params
+    let body = null
+    const methods = method || "POST"
 
-    // let browser set Content-Type automatically when params is FormData
-    // multipart/form-data?
-    if(body instanceof FormData) {
-        delete headers['Content-Type'];
-    } 
-    if(is_blob) {
-        headers["Content-Type"] = "application/octet-stream"
-    } else {    // is json
-        body = JSON.stringify(params)
+    switch(input_type) {
+        case FetchTypeEnum.FormData:
+            // headers["Content-Type"] = "multipart/form-data" // just omit it, browser will set it automatically
+            body = new FormData()
+            for(let key in params) { body.append(key, params[key]) }
+            break
+        case FetchTypeEnum.Blob:
+            headers["Content-Type"] = "application/octet-stream"
+            body = params   // body = fs.createReadStream(params)
+            break
+        case FetchTypeEnum.Json:
+        default:
+            headers["Content-Type"] = "application/json"
+            body = JSON.stringify(params)
+            break
     }
 
     // send request
-    const op = { method: method, headers: headers, body: body }
+    const op = { method: methods, headers: headers, body: body }
     const result = await fetch(url, op);
 
     // debug info
-    console.log(`[DEBUG] Send: ${url}: ${op}`);
-    console.log(`[DEBUG] Resp: ${url}: ${result.headers.get("content-type")}`)
-    
-    const result_type = result.headers.get("content-type")
+    console.log(`[DEBUG] Send: <${url}>: ${op.headers["Content-Type"]}`);
+    console.log(`[DEBUG] Resp: <${url}>: ${result.status} ${result.headers.get("content-type")}`)
+
+    if(result.status != 200) {
+        console.log(`[ERROR] ${result.status}`);
+        return null;
+    }
+
+    const result_type = result.headers?.get("content-type")
     if (result_type && result_type.includes("application/json")) {
         return result.json();
     }
-    // if (result_type && result_type.includes("text/plain")) {
-    //     return result.text();
-    // }
-    // if (result_type && result_type.includes("application/octet-stream")) {
-    //     return result.blob();
-    // }
+    if (result_type && result_type.includes("text/plain")) {
+        return result.text();
+    }
+    if (result_type && result_type.includes("application/octet-stream")) {
+        return result.blob();
+    }
+    // image/png .etc
+    if (result_type && result_type.includes("image/")) {
+        let arrayBuffer = await result.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer);
+        return buffer;
+    }
     return result;
+    
 }
-
 /*
     test code with python-fastapi:
     1/ test normal json request and normal json response
         class TestModel(BaseModel):
-            name: str
-            age: int
+            info: str
 
         @app.post("/test_body")
         async def test_body(info: TestModel):
             return {"body": info}
 
-        let r = await fetchWrapper("http://127.0.0.1:8000/test_body", {name:"111", age:10})
+        let r = await fetchWrapper("http://127.0.0.1:8000/test_body", {info:"111"})
 
     2/ test normal json request and download response
         // window.location.href = 'http://127.0.0.1:8000/download';
@@ -70,15 +87,19 @@ const fetchWrapper = async (url, params, option={}) => {
         async def test_download(p: TestModel):
             return FileResponse(p.path)
 
-        let r= await fetchWrapper("http://127.0.0.1:8000/test_download", {path:"./test.txt"})
+        let r= await fetchWrapper("http://127.0.0.1:8000/test_download", {path:"./test.png"})
+        let arrayBuffer = await r.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer);
+        fs.writeFileSync('output.png', buffer);
 
     3/ test form data request and normal json response
         @app.post("/test_form_data")
-        async def test_form_data(a: str=Form()):
-            return {"result": a}
+        async def test_form_data(info: str=Form()):
+            return {"result": info}
 
-        let formData = new FormData(); p.append("a", "b");
-        let r = await fetchWrapper("http://127.0.0.1:8000/test_form_data", formData)
+        let r = await fetchWrapper("http://127.0.0.1:8000/test_form_data", 
+            {info:"111"}, 
+            {input_type: FetchTypeEnum.FormData})
 
     4/ test form data(upload file) request and normal json response
         @app.post("/test_upload")
@@ -86,22 +107,18 @@ const fetchWrapper = async (url, params, option={}) => {
             with open(fe.filename, "wb") as buffer:
                 shutil.copyfileobj(fe.file, buffer)
             return {"filename": fe.filename}
+
+        @app.post("/test_upload")
+        async def test_upload(request: Request):
+            data = await request.body()
+            with open('received_file', 'wb') as f:
+                f.write(data)
+            return {"filename": 1}
         
         let fe = new File(["123"], "test.txt", {type: "text/plain"});
         const formData = new FormData(); formData.append("fe", fe);
-        let r= await fetchWrapper("http://127.0.0.1:8000/test_upload", formData)
+        let r= await fetchWrapperOld("http://127.0.0.1:8000/test_upload", formData)
+
+        (async ()=>{
+        })()
     */
-(async ()=>{
-    // let r= await fetchWrapper("http://127.0.0.1:8000/test_download", {path:"./test.b"})
-    // create a Blob with content="asd"
-    
-    // let blob = new Blob(["asd"], {type: "text/plain"});
-    // let fe = new File([blob], "test.b2", {type: "text/plain"});
-
-    // const fe = fs.readFileSync("./1.png", 'utf8')
-    // let r= await fetchWrapper("http://127.0.0.1:8000/test_upload", fe, {is_blob: true})
-
-    // let r= await fetchWrapper("http://127.0.0.1:8000/test_download", {path:"./b"})
-    // let t = await r.text()
-    // console.log(r)
-})()
