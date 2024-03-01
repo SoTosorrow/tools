@@ -43,7 +43,7 @@ def autoTranslateText(text:str):
     else:
         source = "en"
         target = "zh"
-    print("[DEBUG] translate from {} to {}".format(source, target))
+    # print("[DEBUG] translate from {} to {}".format(source, target))
     return invokeTranslateText(text, source, target)
     
 # @todo
@@ -76,4 +76,5 @@ if __name__ == '__main__':
     input = sys.argv[1]
     print(input)
     r1 = autoTranslateText(input)
-    print(json.loads(r1)["TargetText"], time.time() - t1)
+    # time.time() - t1
+    print(json.loads(r1)["TargetText"])
