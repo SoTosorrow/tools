@@ -3,7 +3,17 @@ from qcloud_cos import CosConfig, CosS3Client
 
 import base64
 import time
+import re
 from config import tencent_acc_config as config
+
+def containsChinese(text:str):
+    pattern = re.compile("[\u4e00-\u9fa5]")
+    result = re.search(pattern, text)
+    
+    if result == None:
+        return False
+    else:
+        return True
 
 def bytes2Base64(data):
     return base64.b64encode(data).decode("utf-8")

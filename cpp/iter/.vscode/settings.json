@@ -1,7 +1,0 @@
-{
-    "clangd.arguments": [
-        "-j=4",
-        // "--all-scopes-completion",
-        // "--completion-style=detailed",
-    ],
-}

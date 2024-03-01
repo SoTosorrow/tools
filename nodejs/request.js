@@ -5,8 +5,14 @@ const FetchTypeEnum = {
 }
 
 // TODO interceptor
-interceptorRequest = {}
-interceptorResponse = {}
+const interceptorRequest = ()=>{
+    let headers = {}
+    return headers
+}
+const interceptorResponse = ()=>{
+    let response = {}
+    return response
+}
 
 const fetchWrapper = async(url, params={}, options={})=>{
     const { method, input_type=FetchTypeEnum.Json, output_type } = options
@@ -36,7 +42,11 @@ const fetchWrapper = async(url, params={}, options={})=>{
 
     // send request
     const op = { method: methods, headers: headers, body: body }
+    // statistcs time use
+    let request_start = new Date().getTime()
     const result = await fetch(url, op);
+    let request_end = new Date().getTime()
+    console.log(`[DEBUG] TimeUse : ${request_end-request_start}ms`);
 
     // debug info
     console.log(`[DEBUG] Send: <${url}>: ${op.headers["Content-Type"]}`);

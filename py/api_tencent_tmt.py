@@ -4,6 +4,7 @@ from tencentcloud.tmt.v20180321 import tmt_client, models
 
 import json
 import time
+import sys
 
 import api_tencent_util as util
 
@@ -16,7 +17,7 @@ import api_tencent_util as util
 # https://console.cloud.tencent.com/api/explorer?Product=tmt&Version=2018-03-21&Action=TextTranslate
 tmt_region = 'ap-shanghai'
 
-def invokeTranslateText(text:str, target="en", source="auto"):
+def invokeTranslateText(text:str, source="auto", target="en", ):
     try:
         cred = util.getCredential()
         
@@ -35,6 +36,16 @@ def invokeTranslateText(text:str, target="en", source="auto"):
     except TencentCloudSDKException as err:
         print(err)
 
+def autoTranslateText(text:str):
+    if util.containsChinese(text):
+        source = "zh"
+        target = "en"
+    else:
+        source = "en"
+        target = "zh"
+    print("[DEBUG] translate from {} to {}".format(source, target))
+    return invokeTranslateText(text, source, target)
+    
 # @todo
 # def invokeTranslateSpeech(src, target="en", source="zh"):
 #     data_format = src.split(".")[-1]
@@ -61,7 +72,8 @@ def invokeTranslateText(text:str, target="en", source="auto"):
 #         print(err)
 
 if __name__ == '__main__':
-    # t1 = time.time()
-    # r1 = invokeTranslateText("温哥华的大将军刘能抵达了枫丹白露宫")
-    # print(r1, time.time() - t1)
-    pass
+    t1 = time.time()
+    input = sys.argv[1]
+    print(input)
+    r1 = autoTranslateText(input)
+    print(json.loads(r1)["TargetText"], time.time() - t1)
