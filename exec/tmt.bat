@@ -1,4 +1,7 @@
 @echo off
+
+@REM setlocal
+@REM 当前脚本所在目录
 set path=%~dp0
 cd /d %path%
 cd ..

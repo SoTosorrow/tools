@@ -1,9 +1,9 @@
 @echo off
 
-@REM set yourself chrome path
+@REM set yourself path
 set chromePath="C:\Program Files\Google\Chrome\Application\chrome.exe"
 
-if not exist "%chromePath%" (
+if not exist %chromePath% (
     echo "Chrome not found."
     exit /b
 )

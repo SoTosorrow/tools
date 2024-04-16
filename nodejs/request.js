@@ -4,9 +4,14 @@ const FetchTypeEnum = {
     Blob: "application/octet-stream"
 }
 
-// TODO interceptor
-const interceptorRequest = ()=>{
+const interceptorRequest = (isBrowser=false)=> {
     let headers = {}
+    if(isBrowser) {
+        let token = localStorage.getItem("token")
+        if(token) {
+            headers["Authorization"] = "Bearer "+token
+        }
+    }
     return headers
 }
 const interceptorResponse = ()=>{
@@ -14,34 +19,32 @@ const interceptorResponse = ()=>{
     return response
 }
 
-const fetchWrapper = async(url, params={}, options={})=>{
-    const { method, input_type=FetchTypeEnum.Json, output_type } = options
+export const fetchWrapper= async(url, params={}, options={})=>{
+    const { 
+        fetchMethod = "POST", 
+        fetchType = FetchTypeEnum.Json 
+    } = options
+    const headers = interceptorRequest()
 
-    let headers = {
-        // "Authorization": "Bearer " + localStorage.getItem('token')  // add token
-    }
-    let body = null
-    const methods = method || "POST"
-
-    switch(input_type) {
-        case FetchTypeEnum.FormData:
+    let op = {method: fetchMethod, headers: headers}
+    // if(fetchMethod === "GET") {}
+    if(fetchMethod === "POST") {
+        let body = null;
+        if(fetchType == FetchTypeEnum.FormData) {
             // headers["Content-Type"] = "multipart/form-data" // just omit it, browser will set it automatically
             body = new FormData()
-            for(let key in params) { body.append(key, params[key]) }
-            break
-        case FetchTypeEnum.Blob:
+            for (let key in params) { body.append(key, params[key]) }
+        }
+        if(fetchType == FetchTypeEnum.Blob) {
             headers["Content-Type"] = "application/octet-stream"
             body = params   // body = fs.createReadStream(params)
-            break
-        case FetchTypeEnum.Json:
-        default:
+        }
+        if(fetchType == FetchTypeEnum.Json) {
             headers["Content-Type"] = "application/json"
             body = JSON.stringify(params)
-            break
+        }   
+        op = {...op, body:body}
     }
-
-    // send request
-    const op = { method: methods, headers: headers, body: body }
     // statistcs time use
     let request_start = new Date().getTime()
     const result = await fetch(url, op);
@@ -49,7 +52,7 @@ const fetchWrapper = async(url, params={}, options={})=>{
     console.log(`[DEBUG] TimeUse : ${request_end-request_start}ms`);
 
     // debug info
-    console.log(`[DEBUG] Send: <${url}>: ${op.headers["Content-Type"]}`);
+    console.log(`[DEBUG] Send: <${url}>: ${op}`);
     console.log(`[DEBUG] Resp: <${url}>: ${result.status} ${result.headers.get("content-type")}`)
 
     if(result.status != 200) {
